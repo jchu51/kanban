@@ -1,0 +1,19 @@
+{
+  "name": "kanban",
+  "version": "1.0.0",
+  "description": "Kanban task management web app",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon ./src/main.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "task management"
+  ],
+  "author": "Jonathan Chueh",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.21",
+    "ts-node": "^10.9.1"
+  }
+}
