@@ -8,80 +8,60 @@ import {
   UpdateTaskCommand,
   UpdateTaskCommandPayload,
 } from "./task-commands";
-import {
-  TaskCreatedEvent,
-  TaskDeletedEvent,
-  TaskUpdatedEvent,
-} from "../../../domain/task/events";
+
 import { TaskNotFoundError } from "../../../interfaces/http/task/task-error";
-import { EventStoreRepository } from "../../../infrastructure/event-store/event-store";
+import { TaskRepository } from "../../../domain/task/repositories/task-repository";
 
 export class CreateTaskCommandHandler
-  implements CommandHandler<CreateTaskCommand, CreateTaskCommandPayload, void>
+  implements
+    CommandHandler<CreateTaskCommand, CreateTaskCommandPayload, TaskAggregate>
 {
-  constructor(private readonly eventStoreRepository: EventStoreRepository) {}
+  constructor(private readonly taskRepository: TaskRepository) {}
 
-  async execute(command: CreateTaskCommand): Promise<void> {
-    const event = new TaskCreatedEvent(command.payload.taskId, command.payload);
-    await this.eventStoreRepository.save(event);
+  async execute(command: CreateTaskCommand): Promise<TaskAggregate> {
+    const task = await TaskAggregate.createTask(command);
+    return this.taskRepository.save(task);
   }
 }
 
 export class UpdateTaskCommandHandler
-  implements CommandHandler<UpdateTaskCommand, UpdateTaskCommandPayload, void>
+  implements
+    CommandHandler<UpdateTaskCommand, UpdateTaskCommandPayload, TaskAggregate>
 {
-  constructor(private readonly eventStoreRepository: EventStoreRepository) {}
+  constructor(private readonly taskRepository: TaskRepository) {}
 
-  async execute(command: UpdateTaskCommand): Promise<void> {
-    const task = await getTaskById(
-      this.eventStoreRepository,
-      command.payload.taskId
-    );
+  async execute(command: UpdateTaskCommand): Promise<TaskAggregate> {
+    const task = await getTaskById(this.taskRepository, command.payload.taskId);
 
-    const event = new TaskUpdatedEvent(command.payload.taskId, command.payload);
-    task.updateTask(event);
+    task.updateTask(command);
 
-    await this.eventStoreRepository.save(event);
+    return this.taskRepository.save(task);
   }
 }
 
 export class DeleteTaskCommandHandler
   implements CommandHandler<DeleteTaskCommand, DeleteTaskCommandPayload, void>
 {
-  constructor(private readonly eventStoreRepository: EventStoreRepository) {}
+  constructor(private readonly taskRepository: TaskRepository) {}
 
   async execute(command: DeleteTaskCommand): Promise<void> {
-    const task = await getTaskById(
-      this.eventStoreRepository,
-      command.payload.taskId
-    );
+    const task = await getTaskById(this.taskRepository, command.payload.taskId);
 
-    const event = new TaskDeletedEvent(command.payload.taskId, command.payload);
-    task.deleteTask(event);
+    task.deleteTask(command);
 
-    await this.eventStoreRepository.save(event);
+    await this.taskRepository.save(task);
   }
 }
 
 const getTaskById = async (
-  eventStoreRepository: EventStoreRepository,
+  taskRepository: TaskRepository,
   id: string
 ): Promise<TaskAggregate> => {
-  let task: TaskAggregate;
-  const events = await eventStoreRepository.getEventsByAggregateId(id);
+  const task = await taskRepository.findById(id);
 
-  if (events.length === 0) {
+  if (!task) {
     throw new TaskNotFoundError(id);
   }
-
-  task = new TaskAggregate(
-    events[0].payload.taskId,
-    events[0].payload.name,
-    events[0].payload.description,
-    events[0].payload.status,
-    events[0].payload.subtasks
-  );
-  // task.loadFromHistory(events);
 
   return task;
 };

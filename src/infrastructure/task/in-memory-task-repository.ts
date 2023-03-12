@@ -1,4 +1,3 @@
-import { AggregateRootId } from "../../domain/shared/aggregate/aggregate-root-id";
 import { TaskAggregate } from "../../domain/task/aggregate/task-aggregates";
 import { TaskRepository } from "../../domain/task/repositories/task-repository";
 
@@ -6,13 +5,12 @@ export class InMemoryTaskRepository implements TaskRepository {
   tasks: TaskAggregate[] = [];
 
   save = async (task: TaskAggregate): Promise<TaskAggregate> => {
-    const tasks = this.tasks.filter((t) => t.taskId !== task.taskId);
+    const tasks = this.tasks.filter((t) => t.id !== task.id);
 
     tasks.push(task);
     this.tasks = tasks;
 
     return new TaskAggregate(
-      new AggregateRootId(task.taskId),
       task.name,
       task.description,
       task.status,
@@ -21,7 +19,7 @@ export class InMemoryTaskRepository implements TaskRepository {
   };
 
   delete = async (taskId: string): Promise<void> => {
-    const tasks = this.tasks.filter((t) => t.taskId !== taskId);
+    const tasks = this.tasks.filter((t) => t.id !== taskId);
     this.tasks = tasks;
   };
 
@@ -30,14 +28,13 @@ export class InMemoryTaskRepository implements TaskRepository {
   };
 
   findById = async (taskId: string): Promise<TaskAggregate | undefined> => {
-    const task = this.tasks.find((t) => t.taskId === taskId);
+    const task = this.tasks.find((t) => t.id === taskId);
 
     if (!task) {
       return undefined;
     }
 
     return new TaskAggregate(
-      new AggregateRootId(task.taskId),
       task.name,
       task.description,
       task.status,

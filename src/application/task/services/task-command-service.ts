@@ -1,3 +1,4 @@
+import { TaskAggregate } from "../../../domain/task/aggregate/task-aggregates";
 import {
   CreateTaskCommandHandler,
   DeleteTaskCommandHandler,
@@ -16,15 +17,15 @@ export class TaskCommandService {
     private readonly deleteTaskCommandHandler: DeleteTaskCommandHandler
   ) {}
 
-  async createTask(command: CreateTaskCommand): Promise<void> {
-    await this.createTaskCommandHandler.execute(command);
+  async createTask(command: CreateTaskCommand): Promise<TaskAggregate> {
+    return this.createTaskCommandHandler.execute(command);
   }
 
-  async updateTask(command: UpdateTaskCommand): Promise<void> {
-    await this.updateTaskCommandHandler.execute(command);
+  async updateTask(command: UpdateTaskCommand): Promise<TaskAggregate> {
+    return this.updateTaskCommandHandler.execute(command);
   }
 
   async deleteTask(command: DeleteTaskCommand): Promise<void> {
-    await this.deleteTaskCommandHandler.execute(command);
+    return this.deleteTaskCommandHandler.execute(command);
   }
 }

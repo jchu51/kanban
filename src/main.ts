@@ -18,37 +18,28 @@ import {
   UpdateTaskCommand,
 } from "./application/task/commands/task-commands";
 import { GetTaskQuery } from "./application/task/quires/task-quires";
-import { InMemoryEventStoreRepository } from "./infrastructure/event-store/in-memory-event-store-repository";
-import { startProjectionProcessor } from "./infrastructure/projection/start-projection-processer";
-import { TaskProjection } from "./application/task/projections/task-projection";
 
 // infrastructure layer
 const inMemoryTaskRepository = new InMemoryTaskRepository();
-const inMemoryEventStoreRepository = new InMemoryEventStoreRepository();
-
-// create projections
-const taskProjection = new TaskProjection(
-  inMemoryEventStoreRepository,
-  inMemoryTaskRepository
-);
-startProjectionProcessor(taskProjection);
 
 // application layer
 // Task Service
 
-const getTaskQueryHandler = new GetTaskQueryHandler(taskProjection);
-const getAllTaskQueryHandler = new GetAllTaskQueryHandler(taskProjection);
+const getTaskQueryHandler = new GetTaskQueryHandler(inMemoryTaskRepository);
+const getAllTaskQueryHandler = new GetAllTaskQueryHandler(
+  inMemoryTaskRepository
+);
 
 const createTaskCommandHandler = new CreateTaskCommandHandler(
-  inMemoryEventStoreRepository
+  inMemoryTaskRepository
 );
 
 const updateTaskCommandHandler = new UpdateTaskCommandHandler(
-  inMemoryEventStoreRepository
+  inMemoryTaskRepository
 );
 
 const deleteTaskCommandHandler = new DeleteTaskCommandHandler(
-  inMemoryEventStoreRepository
+  inMemoryTaskRepository
 );
 
 const taskQueryService = new TaskQueryService(
@@ -71,14 +62,12 @@ server.listen(8080);
 
 //TEST
 const createTaskCommand = new CreateTaskCommand({
-  taskId: "1",
   name: "J",
   description: "J",
   status: "J",
   subtasks: [],
 });
 const createTaskCommand2 = new CreateTaskCommand({
-  taskId: "2",
   name: "ben",
   description: "J",
   status: "J",
@@ -96,19 +85,17 @@ const deleteTaskCommand = new DeleteTaskCommand({
   taskId: "2",
 });
 
-const getTaskQuery = new GetTaskQuery({
-  taskId: "1",
-});
+// const getTaskQuery = new GetTaskQuery({
+//   taskId: "1",
+// });
 
-(async () => {
-  await taskCommandService.createTask(createTaskCommand);
-  await taskCommandService.createTask(createTaskCommand2);
-  await taskCommandService.updateTask(updateTaskCommand);
-  await taskCommandService.deleteTask(deleteTaskCommand);
+// (async () => {
+//   await taskCommandService.createTask(createTaskCommand);
+//   await taskCommandService.createTask(createTaskCommand2);
+//   // await taskCommandService.updateTask(updateTaskCommand);
+//   // await taskCommandService.deleteTask(deleteTaskCommand);
 
-  const es = await inMemoryEventStoreRepository.getEvents();
-  const eType = await inMemoryEventStoreRepository.getEventsByAggregateType(
-    "TASK"
-  );
-  const e = await inMemoryEventStoreRepository.getEventsByAggregateId("2");
-})();
+//   // const es = await inMemoryTaskRepository.findAll();
+//   // const eType = await inMemoryTaskRepository.findById("1");
+//   // console.log("e", es);
+// })();

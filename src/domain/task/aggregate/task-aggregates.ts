@@ -1,15 +1,12 @@
 import { AggregateRoot } from "../../shared/aggregate/aggregate-root";
-import {
-  TaskCreatedEvent,
-  TaskDeletedEvent,
-  TaskEvents,
-  TaskUpdatedEvent,
-} from "../events/index";
 import { Subtask } from "../valueObjects/subtask";
-import { AggregateRootId } from "../../shared/aggregate/aggregate-root-id";
+import {
+  CreateTaskCommand,
+  DeleteTaskCommand,
+  UpdateTaskCommand,
+} from "../../../application/task/commands/task-commands";
 
 export class TaskAggregate extends AggregateRoot {
-  private _taskId: string;
   private _name: string;
   private _description: string;
   private _status: string;
@@ -17,33 +14,17 @@ export class TaskAggregate extends AggregateRoot {
   private _subtasks: Subtask[];
 
   constructor(
-    taskId: AggregateRootId,
     name: string,
     description: string,
     status: string,
     subtasks: Subtask[]
   ) {
-    super(taskId);
-    this._taskId = taskId.toString();
+    super();
     this._name = name;
     this._description = description;
     this._status = status;
     this._isDeleted = false;
     this._subtasks = subtasks;
-
-    const event: TaskCreatedEvent = new TaskCreatedEvent(this._taskId, {
-      taskId: this._taskId,
-      name: this._name,
-      description: this._description,
-      status: this._status,
-      subtasks: this._subtasks,
-    });
-
-    this.createTask(event);
-  }
-
-  get taskId(): string {
-    return this._taskId;
   }
 
   get name(): string {
@@ -66,23 +47,27 @@ export class TaskAggregate extends AggregateRoot {
     return this._subtasks;
   }
 
-  createTask = async (event: TaskCreatedEvent): Promise<void> => {
-    this.addDomainEvent(event);
+  static createTask = async (
+    command: CreateTaskCommand
+  ): Promise<TaskAggregate> => {
+    return new TaskAggregate(
+      command.payload.name,
+      command.payload.description,
+      command.payload.status,
+      command.payload.subtasks
+    );
   };
 
-  deleteTask = async (event: TaskDeletedEvent): Promise<void> => {
+  deleteTask = async (_command: DeleteTaskCommand): Promise<void> => {
     this._isDeleted = true;
-    this.addDomainEvent(event);
   };
 
-  updateTask = async (event: TaskUpdatedEvent): Promise<void> => {
-    const { name, description, subtasks, status } = event.payload;
+  updateTask = async (command: UpdateTaskCommand): Promise<void> => {
+    const { name, description, subtasks, status } = command.payload;
 
     this._name = name;
     this._description = description;
     this._subtasks = subtasks;
     this._status = status;
-
-    this.addDomainEvent(event);
   };
 }

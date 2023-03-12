@@ -2,7 +2,6 @@ import { Subtask } from "../../../domain/task/valueObjects/subtask";
 import { Command } from "../../shared/handlers/command";
 
 export interface CreateTaskCommandPayload {
-  taskId: string;
   name: string;
   description: string;
   status: string;

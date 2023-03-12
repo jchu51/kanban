@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { Router, Request, Response } from "express";
 import {
   CreateTaskCommand,
@@ -31,7 +30,7 @@ export class TaskController implements Controller {
       .delete("/:taskId", taskErrorHandler(this.deleteTask));
   };
 
-  getAllTaskById = async (req: Request, res: Response) => {
+  getAllTaskById = async (_req: Request, res: Response) => {
     const tasks = await this.taskQueryService.getAllTasks();
     return res.status(HttpStatus.OK).json(tasks);
   };
@@ -45,7 +44,6 @@ export class TaskController implements Controller {
 
   createTask = async (req: Request, res: Response) => {
     const command = new CreateTaskCommand({
-      taskId: "1" || uuidv4(),
       name: req.body.name,
       description: req.body.description,
       status: req.body.status,

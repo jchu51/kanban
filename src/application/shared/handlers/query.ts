@@ -1,6 +1,5 @@
 export abstract class Query<TPayload> {
-  constructor(
-    // public readonly type: string,
-    public readonly payload: TPayload
-  ) {}
+  constructor(public readonly payload: TPayload) {}
+
+  abstract validate: (payload: TPayload) => void;
 }
